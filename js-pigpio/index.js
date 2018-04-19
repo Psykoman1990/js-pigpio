@@ -79,8 +79,6 @@ pigpio.prototype.pi = function(host, port, cb) {
     this.sl = new _socklock(host, port);
     this.sl.s = net.connect({host, port});
 
-    this.sl.s.id = Math.floor(Math.random()*1000);
-
     this.sl.s.on('connect', () => {
         // Disable the Nagle algoritm
         that.sl.s.setNoDelay(true);
@@ -91,8 +89,6 @@ pigpio.prototype.pi = function(host, port, cb) {
 
     this.sl.s.on("data", (data) => {
         const command = parseInt(data.toString('hex').substr(0,2),16);
-
-        console.warn("Response to: " + command.toString() + " on socket with id: " + that.sl.s.id.toString());
 
         that.sl._releaseLock();
 
@@ -359,11 +355,11 @@ pigpio.prototype.getHardwareRevision = function(cb) {
  * @param {number} gpio - Port 0-53.
  * @param {string} mode - Must be either INPUT, OUTPUT, ALT0, ALT1, ALT2, ALT3, ALT4 or ALT5.
  */
-pigpio.prototype.set_mode = function (gpio, mode, callback) {
+pigpio.prototype.set_mode = function (gpio, mode) {
     "use strict";
     assert_gpio_pin_in_range(gpio,0,53);
     assert([this.INPUT, this.OUTPUT, this.ALT0, this.ALT1, this.ALT2, this.ALT3, this.ALT4, this.ALT5].includes(mode), "Mode must be INPUT, OUTPUT, ALT0, ALT1, ALT2, ALT3, ALT4, ALT5");
-    _pi_gpio_command(this.sl,def.PI_CMD_MODES, gpio, mode, callback, true);
+    _pi_gpio_command(this.sl,def.PI_CMD_MODES, gpio, mode, undefined, true);
 };
 
 /**
