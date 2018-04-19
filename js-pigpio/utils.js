@@ -38,26 +38,49 @@ class _socklock {
     /* eslint: no-unmodified-loop-condition */
     _acquireLock() {
         "use strict";
-        let timeout = false;
-        setTimeout(() => {
-            timeout = true
-        }, 500);
+
+        if (this.s.id !== undefined) {
+            console.warn("aquire lock for " + this.s.id.toString());
+        }
+
+        console.warn("Pre acquire:", _LOCKS);
+
+        const start = process.hrtime();
+
         /* eslint-disable no-unmodified-loop-condition */
-        while (!timeout && _LOCKS[this.host + ':' + this.port] !== undefined) {
-            if (_LOCKS[this.host + ':' + this.port] === undefined) {
-                _LOCKS[this.host + ':' + this.port] = 'Locked';
-            } else {
-                throw new Error('Can not acquire Lock');
+        while (_LOCKS[this.host + ':' + this.port] !== undefined) {
+            /* if someone else has the lock wait until timeout accured */
+            var diff = process.hrtime(start)[1] / (1000000 * 500);
+            if (diff >= 1){
+                break;
             }
         }
         /* eslint-disable no-unmodified-loop-condition */
+
+        if (_LOCKS[this.host + ':' + this.port] === undefined) {
+            _LOCKS[this.host + ':' + this.port] = 'Locked';
+        }
+        else {
+            throw new Error('Can not acquire Lock');
+        }
+
+        console.warn("Post aquire:", _LOCKS);
     }
 
     _releaseLock() {
         "use strict";
+
+        if (this.s.id !== undefined) {
+            console.warn("release lock for " + this.s.id.toString());
+        }
+
+        console.warn("Pre release:", _LOCKS);
+
         if (_LOCKS[this.host + ':' + this.port] !== undefined) {
             _LOCKS[this.host + ':' + this.port] = undefined;
         }
+
+        console.warn("Post release:", _LOCKS);
     }
 }
 
@@ -72,7 +95,21 @@ exports._pi_gpio_command = function(socketlock, command, parameter1, parameter2,
         .word32le(parameter2)
         .word32le(0);
 
-    socketlock._acquireLock();
+    console.warn("__________");
+
+    console.warn("pi_gpio_command: " + command.toString() + " wait for response: " + wait_for_response.toString());
+
+    try {
+        socketlock._acquireLock();
+    }
+    catch (e) {
+        console.warn(e.toString());
+        next(new Error("Error aquirering lock for sending Command to Pi: "+command));
+    }
+
+    if(socketlock.s.id !== undefined) {
+        console.warn("on socket with id: " +  socketlock.s.id.toString());
+    }
 
     if (next !== undefined) {
         socketlock._next[command] = next;

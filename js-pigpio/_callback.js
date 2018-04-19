@@ -279,11 +279,11 @@ class _callback_thread {
                 data = reverse_string_and_clean(data.toString('hex'));
                 that.handle = data;
                 cb();
-            }, true);
+            }, false);
         });
 
         this.sl.s.on("data", (data) => {
-            const command =  parseInt(data.toString('hex').substr(0,2),16);
+            const command = parseInt(data.toString('hex').substr(0,2),16);
 
             if (that.sl._next[command] !== undefined) {
                 if(command === 99 && that.sl._next[command] !== undefined) {
@@ -405,11 +405,11 @@ class _callback_thread {
 
     run() {
         const that = this;
-        _pi_gpio_command(this.control,  def.PI_CMD_BR1, 0, 0, (err, data) => {
+        _pi_gpio_command(this.control, def.PI_CMD_BR1, 0, 0, (err, data) => {
             if(data !== undefined) {
                 that.lastLevel = data;
             }
-        }, true);
+        }, false);
     }
 
 }
