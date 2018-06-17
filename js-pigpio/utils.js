@@ -83,7 +83,12 @@ exports._pi_gpio_command = function(socketlock, command, parameter1, parameter2,
         socketlock._acquireLock();
     }
     catch (e) {
-        next(new Error("Failed to aquire lock for sending Command to Pi: "+command));
+        if (next !== undefined) {
+            next(new Error("Failed to aquire lock for sending Command to Pi: "+command));
+        }
+        else {
+            console.warn("Failed to aquire lock for sending Command to Pi: "+command);
+        }
     }
 
     if (next !== undefined) {
@@ -91,7 +96,12 @@ exports._pi_gpio_command = function(socketlock, command, parameter1, parameter2,
     }
 
     if(!socketlock.s.write(cmd.buffer())) {
-        next(new Error("Error Sending Command to Pi: "+command));
+        if (next !== undefined) {
+            next(new Error("Error Sending Command to Pi: "+command));
+        }
+        else {
+            console.warn("Error Sending Command to Pi: "+command);
+        }
     }
 
     if(!wait_for_response) {
